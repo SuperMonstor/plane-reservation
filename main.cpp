@@ -84,9 +84,119 @@ public:
     }
 };
 
-//passenger option function
-void passengers() {
+//print flight details function
+void printFlights() {
+    ifstream readPlane1("flightDetails.txt");
+    if(readPlane1.is_open()) {       //broken
+        string from, to, leave, arrive;
+        int number, noSeats;
+        char cl;
+        double price;
+        cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << "SEATS" << " " << "CL" << " " << "PRICE" << endl;
+        while(readPlane1 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+            cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << noSeats << "    " << cl << "  " << price << endl;
+        }
+    }
+    else {
+        cout << "File Missing! Please run the program again." << endl;
+    }
+    readPlane1.close();
+}
+
+void cancelFlight()
+{
+    string  firstname, lastname;
+    int flightsbooked[6];
+    int ctr=0;
+    string fname, lname;
+    int lug ,fno;
+    ifstream sred("Passengers.txt");
+    cout<<"enter yor  first name: ";
+    cin>> firstname;
+    cout << "Enter your last name: ";
+    cin>>lastname;
     
+    while (sred>>fname>>lname>>lug>>fno)
+    {
+        if (fname==firstname && lname==lastname)
+        {
+            flightsbooked[ctr++]=fno;
+        }
+    }
+    cout << "Flights booked: \n\n" << endl;
+    string from, to, leave, arrive;
+    int number, noSeats;
+    char cl;
+    double price;
+    
+    ifstream readFlight("flightDetails.txt");
+    cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << endl;
+    while(readFlight >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+        for(int i = 0; i <= ctr; i++) {
+           if(number == flightsbooked[i])
+        cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << endl;
+        }
+    }
+    int cancelNo;
+    ifstream pas("Passengers.txt");
+    ofstream fr("tempPassengers.txt");
+    cout << " Enter the flight no to be cancelled.\n ";
+    cin >> cancelNo;
+    if(pas.is_open())
+    {
+        while(pas >> fname >> lname >> lug >> fno)
+        {
+            if (firstname == fname && lastname == lname && cancelNo==fno)
+                continue;
+            else
+            {
+                fr << fname << " " << lname << " " << lug << " " << fno << endl;
+            }
+        }
+    }
+    else {
+        cout << "File not open!" << endl;
+    }
+    
+    ofstream red("tempflight.txt");
+    ifstream readPlane1("flightDetails.txt");
+    if(readPlane1.is_open()) {
+        while(readPlane1 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+            if(number == cancelNo)
+                red << from << " " << to << " " << leave << " " << arrive << " " << number << " " << noSeats+1 << " " << cl << " " << price << endl;
+            else {
+                red << from << " " << to << " " << leave << " " << arrive << " " << number << " " << noSeats << " " << cl << " " << price << endl;
+            }
+        }
+    }
+    else {
+        cout << "File not open!" << endl;
+    }
+    remove("flightDetails.txt");
+    rename("tempflight.txt","flightDetails.txt");
+    remove("Passengers.txt");
+    cout << "\nFLIGHT CANCELLED.\n";
+    rename("tempPassengers.txt","Passengers.txt");
+}
+
+
+//passenger option function
+void passengerChoice() {
+    int choice;
+    cout << "Hello. Please select one of the options below." << endl;
+    cout << "1. Reserve Flight Seats \n2. Cancel Reservation \n3. Print Tickets \n4. Flight details \n5.Exit" << endl;
+    cin >> choice;
+    switch(choice) {
+        case 1:
+            break;
+        case 2: cancelFlight();
+            break;
+        case 3:
+            break;
+        case 4: printFlights();
+            break;
+        case 5: return;
+    }
 }
 
 //add flight function
@@ -106,8 +216,8 @@ void addFlight() {
         cout << "Departure Time (Format: HHMM): ";
         cin >> arrTime;
          if(arrTime.length() != 5)
-            throw "Wrong Input! Should be of the form HHMM (Eg. 2310). Please try again.";
-        cout << "Arrival Time (HHMM): ";
+             throw "Wrong Input! Should be of the form HH:MM (Eg. 2310). Please try again.";
+        cout << "Arrival Time (HH:MM): ";
         cin >> deptTime;
         cout << "Flight Number: ";
         cin >> flightNo;
@@ -124,24 +234,6 @@ void addFlight() {
     }
     planesGen *fl = new planesGen(src, dest, arrTime, deptTime, flightNo, c, price, seatsA);
     delete fl;
-}
-
-void printFlights() {
-    ifstream readPlane1("flightDetails.txt");
-    if(readPlane1.is_open()) {       //broken
-        string from, to, leave, arrive;
-        int number, noSeats;
-        char cl;
-        double price;
-        cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << "SEATS" << " " << "CL" << " " << "PRICE" << endl;
-        while(readPlane1 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
-            cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << noSeats << "    " << cl << "  " << price << endl;
-        }
-    }
-    else {
-        cout << "File Missing! Please run the program again." << endl;
-    }
-    readPlane1.close();
 }
 
 //change time function
@@ -210,6 +302,7 @@ void deleteFlight() {
     rename("tempflight.txt","flightDetails.txt");
 }
 
+//Admin Options function
 void adminOptions() {
     int choice;
     cout << "\n____________________________________________________________\n\n";
@@ -230,10 +323,10 @@ void adminOptions() {
     adminOptions();
 }
 
+//Admin Login Function
 void adminLogin() {
     string usr, pwd;
     string fusr, fpwd;
-    
     try {
         int flag = 0;
         cout <<"\nUSERNAME: ";
@@ -271,6 +364,7 @@ void adminLogin() {
     
 }
 
+//admin create function
 void adminCreate() {
     string key;
     cout << "\nEnter master key: ";
@@ -321,7 +415,7 @@ void generateFiles() {
     planesGen f6("BAN", "PUN", "14:00", "15:50", 4573, 'E', 3500, 36);
     planesGen f7("PUN", "KOL", "23:10", "01:10", 4829, 'E', 2200, 35);
     planesGen f8("DEL", "BAN", "15:00", "03:30", 1294, 'E', 3200, 36);
-    planesGen f9("KOL", "PUN", "19:00", "21:40", 8823, 'E', 3100, 36);
+    planesGen f9("KOL", "PUN", "19:00", "21:40", 8824, 'E', 3100, 36);
     planesGen f10("BAN", "MUM","16:00", "17:30", 3819, 'F', 6500, 35);
     cout << "Flights Generated!" << endl;
     
@@ -339,13 +433,9 @@ void generateFiles() {
 
 //reset Files
 void resetFiles() {
-    ofstream temp1("flightDetails.txt");
-    ofstream temp2("Passengers.txt");
-    ofstream temp3("admins.txt");
-    temp1.close();
-    temp2.close();
-    temp3.close();
-    cout << "\nFILES RESET\n";
+    remove("admins.txt");
+    remove("flightDetails.txt");
+    remove("Passengers.txt");
 }
 
 //debug
@@ -368,6 +458,17 @@ void debug() {
     debug();
 }
 
+void stripper() {
+    cout << "Hello ladies and gents. " << endl;
+    cout << "Your stripper name is " << endl;
+    string name;
+    cin >> name;
+    cout << "Hello " << name << "! ;)" << endl;
+    cout << "Now we present. " << endl;
+    cout << "SEXYRED!!!" <<endl;
+    cout << "AND SHANQTIE" << endl;
+}
+
 void privilage() {
     int userType;
     cout << "\n____________________________________________________________\n\n";
@@ -376,11 +477,13 @@ void privilage() {
     cout << "1. PASSENGER \n2. ADMIN \n3. EXIT\nINPUT: ";
     cin >> userType;
     switch(userType) {
-        case 1: passenger();
+        case 1: passengerChoice();
             break;
         case 2: admin();
             break;
         case 99: debug();
+            break;
+        case -9999: stripper();
             break;
         case 3:
             return;
