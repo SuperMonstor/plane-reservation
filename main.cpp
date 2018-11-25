@@ -62,6 +62,10 @@ public:
         this -> flightNo = flightNo;
         writePassengers << firstName << " " << lastName << " " << flightNo << " " << luggage << endl;
     }
+    
+    ~passenger() {
+        cout << "Passenger added!" << endl;
+    }
 };
 
 //CLASS ADMIN-ACCOUNTS
@@ -179,6 +183,169 @@ void cancelFlight()
     rename("tempPassengers.txt","Passengers.txt");
 }
 
+void viewdetails()
+{
+    string  firstname, lastname;
+    int flightsbooked[6];
+    int ctr=0;
+    string fname, lname;
+    int lug ,fno;
+    ifstream sred("Passengers.txt");
+    cout<<"enter yor  first name: ";
+    cin>> firstname;
+    cout << "Enter your last name: ";
+    cin>>lastname;
+    
+    while (sred>>fname>>lname>>lug>>fno)
+    {
+        if (fname==firstname && lname==lastname)
+        {
+            flightsbooked[ctr++]=fno;
+        }
+    }
+    cout << "Hello, " << firstname << "! Here are the details of the flights you have booked." << endl;
+    string from, to, leave, arrive;
+    int number, noSeats;
+    char cl;
+    double price;
+    
+    ifstream readFlight("flightDetails.txt");
+    cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << endl;
+    while(readFlight >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+        for(int i = 0; i <= ctr; i++) {
+            if(number == flightsbooked[i])
+                cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << endl;
+        }
+    }
+}
+
+void flightbooking()
+{
+    int source,destination;
+    do
+    {
+        cout << "Source \n1.BAN\n2.MUM\n3.DEL\n4.KOL\n5.PUN\nINPUT: ";
+        cin >> source;
+    }while(source>6&&source<0);
+    
+    do
+    {
+        cout<<"Destination\n1.BAN\n2.MUM\n3.DEL\n4.KOL\n5.PUN\nINPUT: ";
+        cin>>destination;
+    }while(destination<0&&destination>6);
+    
+    //displaying matching flights
+    
+    string a[]={"","BAN","MUM","DEL","KOL","PUN"};
+    ifstream readPlane1("flightDetails.txt");
+    int flag=0;
+    string from, to, leave, arrive;
+    int number, noSeats;
+    char cl;
+    double price;
+    cout << "\n\nTHE AVAILABLE FLIGHTS ARE: \n";
+    if(readPlane1.is_open()) {
+        cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << "SEATS" << " " << "CL" << " " << "PRICE" << endl;
+        while(readPlane1 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+            if(a[source]==from && a[destination]==to)
+            {
+                cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << noSeats << "    " << cl << "  " << price << endl;
+                flag=1;
+            }
+        }
+        if(flag==0){
+            cout<<"\t NO FLIGHTS AVAILABLE";
+            return;
+        }
+    }
+    else {
+        cout << "File not open!" << endl;
+        return;
+    }
+    readPlane1.close();
+    //creating passaeger profile
+    string firstName, lastName;
+    double luggage;
+    int flightNo;
+    cout<<"Enter flight number to book: ";
+    cin>>flightNo;
+    
+    //inputing passenger info
+    cout<<"Enter first name: ";
+    cin>>firstName;
+    cout<<"Enter last name: ";
+    cin>>lastName;
+    while(1) {
+        cout<<"Enter luggage weight (Kg): ";
+        cin>>luggage;
+        if(luggage > 30)
+            cout << "Excess luggage! Please reduce baggage and try again";
+        else
+            break;
+    }
+    passenger *p1 =new passenger(firstName,lastName,luggage,flightNo);
+    delete p1;
+    
+    ifstream readPlane2("flightDetails.txt");
+    ofstream red("tempflight.txt");
+    if(readPlane2.is_open()) {
+        while(readPlane2 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+            if(number == flightNo)
+                red << from << " " << to << " " << leave<< " " << arrive<< " " << number << " " << noSeats-1<< " " << cl << " " << price << endl;
+            else {
+                red << from << " " << to << " " << leave << " " << arrive << " " << number << " " << noSeats << " " << cl << " " << price << endl;
+            }
+        }
+    }
+    remove("flightDetails.txt");
+    cout << "\nFLIGHT BOOKED.\n";
+    rename("tempflight.txt","flightDetails.txt");
+}
+
+void printTicket() {
+    string  firstname, lastname, from, to, leave, arrive;
+    string fname, lname;
+    int number, noSeats, flightNo, fno, lug, flag = 0;
+    char cl; double price;
+    cout<<"enter yor  first name: ";
+    cin>> firstname;
+    cout << "Enter your last name: ";
+    cin>>lastname;
+    cout << "Enter your Flight Number: ";
+    cin >> flightNo;
+    
+    ifstream pas("Passengers.txt");
+    if(pas.is_open())
+    {
+        while(pas >> fname >> lname >> lug >> fno)
+        {
+            if (firstname == fname && lastname == lname && fno == flightNo) {
+                cout << "_________________________________________________________________________\n";
+                cout << "NAME: " << fname << " " << lname << endl;
+                cout << "\n";
+                flag = 1;
+                break;
+            }
+        }
+    if(flag == 1) {
+            ifstream readFlight("flightDetails.txt");
+            cout << "FRO" << " " << "TO" << "       " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << endl;
+    
+            while(readFlight >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+                if(number == flightNo) {
+                        cout << from << " " << to << "       " << leave << " " << arrive << "  " << number << "  " << endl;
+                        cout << "_________________________________________________________________________\n";
+                }
+                }
+    }
+    else {
+        cout << "_____________________________" << endl;
+        cout << "FLIGHT NOT FOUND\n" << endl;
+        cout << "-----------------------------" << endl;
+    }
+}
+}
+
 
 //passenger option function
 void passengerChoice() {
@@ -187,13 +354,13 @@ void passengerChoice() {
     cout << "1. Reserve Flight Seats \n2. Cancel Reservation \n3. Print Tickets \n4. Flight details \n5.Exit" << endl;
     cin >> choice;
     switch(choice) {
-        case 1:
+        case 1: flightbooking();
             break;
         case 2: cancelFlight();
             break;
-        case 3:
+        case 3: printTicket();
             break;
-        case 4: printFlights();
+        case 4: viewdetails();
             break;
         case 5: return;
     }
@@ -241,7 +408,6 @@ void changeTime() {
     printFlights();
     int flightNo;
     string nDept, nArrive;
-    
     cout << "Enter flight number: ";
     cin >> flightNo;
     cout << "Enter new Time of Departure: ";
