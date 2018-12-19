@@ -45,22 +45,23 @@ public:
 
 //CLASS PASSENGERS
 class passenger {
-    string firstName, lastName;
+    string firstName, lastName, date;
     double luggage;
     int flightNo;
     
 public:
     passenger() {
-        firstName = lastName = "";
+        firstName = lastName = date = "";
         luggage = flightNo = 0;
     }
     
-    passenger(string firstName, string lastName, int luggage, int flightNo) {
+    passenger(string firstName, string lastName, string date, int luggage, int flightNo) {
         this -> firstName = firstName;
         this -> lastName = lastName;
+        this -> date = date;
         this -> luggage = luggage;
         this -> flightNo = flightNo;
-        writePassengers << firstName << " " << lastName << " " << flightNo << " " << luggage << endl;
+        writePassengers << firstName << " " << lastName << " " << date << " " << flightNo << " " << luggage << endl;
     }
     
     ~passenger() {
@@ -226,7 +227,7 @@ void flightbooking()
     {
         cout << "Source \n1.BAN\n2.MUM\n3.DEL\n4.KOL\n5.PUN\nINPUT: ";
         cin >> source;
-    }while(source>6&&source<0);
+    }while(source>6 && source<0);
     
     do
     {
@@ -264,12 +265,13 @@ void flightbooking()
     }
     readPlane1.close();
     //creating passaeger profile
-    string firstName, lastName;
+    string firstName, lastName, date;
     double luggage;
     int flightNo;
     cout<<"Enter flight number to book: ";
     cin>>flightNo;
-    
+    cout << "Enter date of the flight (DD-MM-YYYY): ";
+    cin >> date;
     //inputing passenger info
     cout<<"Enter first name: ";
     cin>>firstName;
@@ -283,7 +285,7 @@ void flightbooking()
         else
             break;
     }
-    passenger *p1 =new passenger(firstName,lastName,luggage,flightNo);
+    passenger *p1 =new passenger(firstName,lastName, date, flightNo,luggage);
     delete p1;
     
     ifstream readPlane2("flightDetails.txt");
@@ -304,7 +306,7 @@ void flightbooking()
 
 void printTicket() {
     string  firstname, lastname, from, to, leave, arrive;
-    string fname, lname;
+    string fname, lname, date;
     int number, noSeats, flightNo, fno, lug, flag = 0;
     char cl; double price;
     cout<<"enter yor  first name: ";
@@ -317,10 +319,10 @@ void printTicket() {
     ifstream pas("Passengers.txt");
     if(pas.is_open())
     {
-        while(pas >> fname >> lname >> lug >> fno)
+        while(pas >> fname >> lname >> date >> lug >> fno)
         {
             if (firstname == fname && lastname == lname && fno == flightNo) {
-                cout << "_________________________________________________________________________\n";
+                cout << "__________________________________\n";
                 cout << "NAME: " << fname << " " << lname << endl;
                 cout << "\n";
                 flag = 1;
@@ -329,12 +331,12 @@ void printTicket() {
         }
     if(flag == 1) {
             ifstream readFlight("flightDetails.txt");
-            cout << "FRO" << " " << "TO" << "       " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << endl;
+            cout << "FRO" << " " << "TO" << "       " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << "DATE" << endl;
     
             while(readFlight >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
                 if(number == flightNo) {
-                        cout << from << " " << to << "       " << leave << " " << arrive << "  " << number << "  " << endl;
-                        cout << "_________________________________________________________________________\n";
+                        cout << from << " " << to << "       " << leave << " " << arrive << "  " << number << "  " << date << endl;
+                        cout << "__________________________________\n";
                 }
                 }
     }
@@ -497,7 +499,8 @@ void adminLogin() {
         int flag = 0;
         cout <<"\nUSERNAME: ";
         cin >> usr;
-        while(readAdmin >> fusr >> fpwd) {
+        ifstream readAdmin1("admins.txt");
+        while(readAdmin1 >> fusr >> fpwd) {
             if(fusr == usr) {
                 flag = 1;
                 break;
@@ -512,13 +515,16 @@ void adminLogin() {
             }
             if(flag == 1) {
                 cout << "\nLOGIN SUCCESSFUL!" << endl;
+                readAdmin1.close();
                 adminOptions();
             }
             else{
+                readAdmin1.close();
                 throw "Password is incorrect! Please try again.";
             }
         }
         else {
+            readAdmin1.close();
             throw "Username not found!";
         }
     }
@@ -585,10 +591,10 @@ void generateFiles() {
     planesGen f10("BAN", "MUM","16:00", "17:30", 3819, 'F', 6500, 35);
     cout << "Flights Generated!" << endl;
     
-    passenger p1("Sudarshan", "Kumar", 9991, 25);
-    passenger p2("Tanisha", "Naik", 8823, 16);
-    passenger p3("Siddharth", "Mallapa", 4829, 9);
-    passenger p4("Siddhant", "Sud", 3819, 6);
+    passenger p1("Sudarshan", "Kumar", "12-12-2018", 9991, 25);
+    passenger p2("Tanisha", "Naik", "10-12-2018", 8823, 16);
+    passenger p3("Siddharth", "Mallapa", "12-01-2018", 4829, 9);
+    passenger p4("Siddhant", "Sud", "06-12-2018", 3819, 6);
     cout << "People generated!" << endl;
     
     adminAcc a1("user1", "password123");
@@ -660,5 +666,11 @@ void privilage() {
 
 int main() {
     privilage();
+    readPlane.close();
+    writePlane.close();
+    readAdmin.close();
+    writeAdmin.close();
+    readPassengers.close();
+    writePassengers.close();
     return 0;
 }
