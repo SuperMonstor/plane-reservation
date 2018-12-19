@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include<sstream>
+#include <ctime>
 using namespace std;
 
 //initialize database files
@@ -10,7 +12,30 @@ ofstream writePassengers("Passengers.txt", ios::app);
 ifstream readPassengers("Passengers.txt");
 ofstream writeAdmin("admins.txt", ios::app);
 ifstream readAdmin("admins.txt");
+ofstream writeDest("places.txt",ios::app);
+ifstream readDest("places.txt");
 
+int ids[100];
+int key = -1;
+int noPlaces = 6;
+
+class placesGen {
+    string place;
+    
+public:
+    placesGen() {
+        place = "";
+    }
+    
+    placesGen(string place) {
+        this -> place = place;
+        writeDest << place << endl;
+    }
+    
+    ~placesGen() {
+        cout << "Location successfully added." << endl;
+    }
+};
 //PLANES CLASS
 class planesGen {
     string fromLoc, toLoc, leave, arrive;
@@ -108,9 +133,24 @@ void printFlights() {
     readPlane1.close();
 }
 
+//function to get plane ids
+void idcheck() {
+    ifstream readPlane1("flightDetails.txt");
+    if(readPlane1.is_open()) {
+        string from, to, leave, arrive;
+        int number, noSeats;
+        char cl;
+        double price;
+        while(readPlane1 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+            ids[++key] = number;
+        }
+    }
+    readPlane1.close();
+}
+
 void cancelFlight()
 {
-    string  firstname, lastname;
+    string  firstname, lastname,date;
     int flightsbooked[6];
     int ctr=0;
     string fname, lname;
@@ -120,28 +160,40 @@ void cancelFlight()
     cin>> firstname;
     cout << "Enter your last name: ";
     cin>>lastname;
-    
-    while (sred>>fname>>lname>>lug>>fno)
+    int flag =0;
+    while (sred>>fname>>lname>>date>>lug>>fno)
     {
         if (fname==firstname && lname==lastname)
         {
             flightsbooked[ctr++]=fno;
+            flag = 1;
         }
+    }
+    
+    if(flag == 0) {
+        cout << "\nNo registered flights found under this name." << endl;
+        return;
     }
     cout << "Flights booked: \n\n" << endl;
     string from, to, leave, arrive;
     int number, noSeats;
     char cl;
     double price;
-    
+    flag = 0;
     ifstream readFlight("flightDetails.txt");
     cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << endl;
     while(readFlight >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
         for(int i = 0; i <= ctr; i++) {
-           if(number == flightsbooked[i])
-        cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << endl;
+            if(number == flightsbooked[i])
+                cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << endl;
+            flag = 1;
         }
     }
+    if(flag == 0) {
+        cout << "NO FLIGHT FOUND " << endl;
+        return;
+    }
+    
     int cancelNo;
     ifstream pas("Passengers.txt");
     ofstream fr("tempPassengers.txt");
@@ -149,13 +201,13 @@ void cancelFlight()
     cin >> cancelNo;
     if(pas.is_open())
     {
-        while(pas >> fname >> lname >> lug >> fno)
+        while(pas >> fname >> lname >> date >> lug >> fno)
         {
             if (firstname == fname && lastname == lname && cancelNo==fno)
                 continue;
             else
             {
-                fr << fname << " " << lname << " " << lug << " " << fno << endl;
+                fr << fname << " " << lname << " " << date << " "<< lug << " " << fno << endl;
             }
         }
     }
@@ -220,24 +272,60 @@ void viewdetails()
     }
 }
 
+void printLocations() {
+    ifstream readPlaces("places.txt");
+    string d;
+    int i =1;
+    cout << "\n";
+    while (readPlaces >> d) {
+        cout << i <<". " << d << endl;
+        i++;
+    }
+    noPlaces = i-1;
+    readPlaces.close();
+}
+
+int isPresent(string p) {
+    int k=1;
+    ifstream readPlaces("places.txt");
+    string d;
+    while (readPlaces >> d) {
+        if(p == d)
+            k = 0;
+    }
+    readPlaces.close();
+    return k;
+}
+
 void flightbooking()
 {
-    int source,destination;
+    string source,destination;
+    int count=0;
     do
     {
-        cout << "Source \n1.BAN\n2.MUM\n3.DEL\n4.KOL\n5.PUN\nINPUT: ";
+        if(count > 0)
+            cout << "Wrong input. Please try again";
+        count++;
+        cout << "Enter your location of departure" << endl;
+        printLocations();
+        cout<<"\nINPUT: ";
         cin >> source;
-    }while(source>6 && source<0);
+    }while(isPresent(source));
     
+    count = 0;
     do
     {
-        cout<<"Destination\n1.BAN\n2.MUM\n3.DEL\n4.KOL\n5.PUN\nINPUT: ";
+        if(count > 0)
+            cout << "Wrong input. Please try again";
+        count++;
+        cout << "Enter your destination" << endl;
+        printLocations();
+        cout<<"\nINPUT: ";
         cin>>destination;
-    }while(destination<0&&destination>6);
+    }while(isPresent(destination));
     
     //displaying matching flights
     
-    string a[]={"","BAN","MUM","DEL","KOL","PUN"};
     ifstream readPlane1("flightDetails.txt");
     int flag=0;
     string from, to, leave, arrive;
@@ -248,7 +336,7 @@ void flightbooking()
     if(readPlane1.is_open()) {
         cout << "FRO" << " " << "TO" << " " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << "SEATS" << " " << "CL" << " " << "PRICE" << endl;
         while(readPlane1 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
-            if(a[source]==from && a[destination]==to)
+            if(source==from && destination==to)
             {
                 cout << from << " " << to << " " << leave << " " << arrive << "  " << number << "  " << noSeats << "    " << cl << "  " << price << endl;
                 flag=1;
@@ -267,11 +355,54 @@ void flightbooking()
     //creating passaeger profile
     string firstName, lastName, date;
     double luggage;
-    int flightNo;
-    cout<<"Enter flight number to book: ";
-    cin>>flightNo;
+    int flightNo=0;
+    string  fn;
+    int i;
+    
+    cout << "Enter flight number";
+    cin>>fn;
+    for (i=0;i<fn.length();i++)
+    { if(!isdigit(fn[i]))
+    { cout<<"Incorrect flight no\n";
+        cout<<"enter flight no";
+        cin>>fn;}
+        
+        }
+    
+    stringstream sr(fn);
+    sr>>flightNo;
+    ifstream readPlane2("flightDetails.txt");
+    while(readPlane2 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+        if(flightNo == number && noSeats == 0)
+        {
+            cout << "\nFlight is full. No seats available." << endl;
+            return;
+        }
+    }
+    readPlane2.close();
+    
+    while(1)
+    {
     cout << "Enter date of the flight (DD-MM-YYYY): ";
     cin >> date;
+    
+    struct tm tm ;
+    if (strptime(date.c_str(),"%d-%m-%Y",&tm))
+    {
+        stringstream geek(date.substr(0,2));
+        stringstream geek1(date.substr(3,2));
+        stringstream geek2(date.substr(6,4));
+        int d =0, m = 0, y = 0;
+        geek >> d;
+        geek1 >> m;
+        geek2 >> y;
+        if((m < 12 && y <= 2018) || (y <= 2018 && d < 20 && m != 12) )
+            cout << "\nDate has already passed" << endl;
+        else
+            break;
+    }
+        else {std::cout<<"Date is invalid"<<std::endl;}
+    }
     //inputing passenger info
     cout<<"Enter first name: ";
     cin>>firstName;
@@ -288,10 +419,10 @@ void flightbooking()
     passenger *p1 =new passenger(firstName,lastName, date, flightNo,luggage);
     delete p1;
     
-    ifstream readPlane2("flightDetails.txt");
+    ifstream readPlane3("flightDetails.txt");
     ofstream red("tempflight.txt");
-    if(readPlane2.is_open()) {
-        while(readPlane2 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
+    if(readPlane3.is_open()) {
+        while(readPlane3 >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
             if(number == flightNo)
                 red << from << " " << to << " " << leave<< " " << arrive<< " " << number << " " << noSeats-1<< " " << cl << " " << price << endl;
             else {
@@ -308,12 +439,22 @@ void printTicket() {
     string  firstname, lastname, from, to, leave, arrive;
     string fname, lname, date;
     int number, noSeats, flightNo, fno, lug, flag = 0;
-    char cl; double price;
+    char cl; double price;string fn;int i;
     cout<<"enter yor  first name: ";
     cin>> firstname;
     cout << "Enter your last name: ";
     cin>>lastname;
     cout << "Enter your Flight Number: ";
+    cin>>fn;
+    for (i=0;i<fn.length();i++)
+    { if(!isdigit(fn[i]))
+    { cout<<"Incorrect flight no\n";
+        cout<<"enter flight no";
+        cin>>fn;}
+        
+    }
+    stringstream sr(fn);
+    sr>>flightNo;
     cin >> flightNo;
     
     ifstream pas("Passengers.txt");
@@ -329,23 +470,23 @@ void printTicket() {
                 break;
             }
         }
-    if(flag == 1) {
+        if(flag == 1) {
             ifstream readFlight("flightDetails.txt");
             cout << "FRO" << " " << "TO" << "       " << "DEPART" << " " << "ARRIVE" << " " << "FLTNO" << " " << "DATE" << endl;
-    
+            
             while(readFlight >> from >> to >> leave >> arrive >> number >> noSeats >> cl >> price) {
                 if(number == flightNo) {
-                        cout << from << " " << to << "       " << leave << " " << arrive << "  " << number << "  " << date << endl;
-                        cout << "__________________________________\n";
+                    cout << from << " " << to << "       " << leave << " " << arrive << "  " << number << "  " << date << endl;
+                    cout << "__________________________________\n";
                 }
-                }
+            }
+        }
+        else {
+            cout << "_____________________________" << endl;
+            cout << "FLIGHT NOT FOUND\n" << endl;
+            cout << "-----------------------------" << endl;
+        }
     }
-    else {
-        cout << "_____________________________" << endl;
-        cout << "FLIGHT NOT FOUND\n" << endl;
-        cout << "-----------------------------" << endl;
-    }
-}
 }
 
 
@@ -356,7 +497,13 @@ void passengerChoice() {
     cout << "1. Reserve Flight Seats \n2. Cancel Reservation \n3. Print Tickets \n4. Flight details \n5.Exit" << endl;
     cin >> choice;
     switch(choice) {
-        case 1: flightbooking();
+        case 1: try {
+                flightbooking();
+            }
+            catch(std::runtime_error& e) {
+                cout << "Wrong input please try again";
+                flightbooking();
+            }
             break;
         case 2: cancelFlight();
             break;
@@ -371,51 +518,154 @@ void passengerChoice() {
 //add flight function
 void addFlight() {
     //(src, dest, arrTime, deptTime, flightNo, class, price, seats available)
-    string src, dest, arrTime, deptTime;
+    string src, dest, arrTime, deptTime;string fn;int i;
     int flightNo = 0, seatsA = 0;
     double price = 0.0;
     char c = ' ';
-    try{
+    string place;
         cout << "Please enter the flight details." << endl;
         cout << "Flight Source: ";
         cin >> src;
+    int k = 0;
+    ifstream readPlace1("places.txt");
+    if(readPlace1.is_open()) {
+        while(readPlace1 >> place) {
+            if(src == place)
+                k = 1;
+        }
+        if(k==0) {
+            cout << "New location detected. Added to database." << endl;
+            noPlaces++;
+            placesGen *fl = new placesGen(src);
+            delete fl;
 
+        }
+    }
         cout << "Flight Destination: ";
         cin >> dest;
+    k = 0;
+    if(readPlace1.is_open()) {
+        while(readPlace1 >> place) {
+            if(dest == place)
+                k = 1;
+        }
+        if(k==0) {
+            cout << "New location detected. Added to database." << endl;
+            noPlaces++;
+            placesGen *fl = new placesGen(dest);
+            delete fl;
+            
+        }
+    }
+    readPlace1.close();
+    ifstream readPlace2("places.txt");
+    if(readPlace2.is_open()) {
+        while(readPlace2 >> place) {
+            if(src == place)
+                k = 1;
+        }
+        if(k==0) {
+            cout << "New location detected. Added to database." << endl;
+            noPlaces++;
+            placesGen *fl = new placesGen(dest);
+            delete fl;
+        }
+    }
+    readPlace1.close();
+    
+    
         cout << "Departure Time (Format: HHMM): ";
-        cin >> arrTime;
-         if(arrTime.length() != 5)
-             throw "Wrong Input! Should be of the form HH:MM (Eg. 2310). Please try again.";
-        cout << "Arrival Time (HH:MM): ";
         cin >> deptTime;
+        stringstream geek(deptTime.substr(0,2));
+        stringstream geek1(deptTime.substr(3,2));
+    int x =0, y = 0;
+    geek >> x;
+    geek1 >> y;
+    if(deptTime.length() != 5 || x>23 || x < 0 || y > 60 || y < 0)
+            throw "Wrong Input! Should be of the form HH:MM (Eg. 2310). Please try again.";
+        cout << "Arrival Time (HH:MM): ";
+        cin >> arrTime;
+    stringstream geek2(arrTime.substr(0,2));
+    stringstream geek3(arrTime.substr(3,2));
+    int z =0, a = 0;
+    geek2 >> z;
+    geek3 >> a;
+    if(z < x)
+        throw "Wrong Input! Arrival time is before departure. Please try again.";
+    if(arrTime.length() != 5 || x>23 || x < 0 || y > 60 || y < 0)
+        throw "Wrong Input! Should be of the form HH:MM (Eg. 2310). Please try again.";
+    idcheck();
+     k = 0;
+    while (k == 0) {
         cout << "Flight Number: ";
-        cin >> flightNo;
+        cin >> fn;
+        for (i=0;i<fn.length();i++)
+        { if(!isdigit(fn[i]))
+        { cout<<"Incorrect flight no\n";
+            cout<<"Enter flight no";
+            cin>>fn;}
+            
+        }
+        stringstream sr(fn);
+        sr>>flightNo;
+        int k1 = 0;
+        for(i=0; i<=key; i++) {
+            if(ids[i] ==  flightNo) {
+                k1 = 1;
+                break;
+            }
+        }
+        if(k1 != 1)
+            k = 1;
+        else
+            cout << "Flight no taken. Please enter again.\n";
+    }
         cout << "Number of vacant seats: ";
         cin >> seatsA;
         cout << "Price of seats: ";
         cin >> price;
         cout << "Seat Class (E, F): ";
         cin >> c;
-    }
-    catch(const char* msg) {
-        cout << msg << endl;
-        addFlight();
-    }
-    planesGen *fl = new planesGen(src, dest, arrTime, deptTime, flightNo, c, price, seatsA);
+    
+    
+    planesGen *fl = new planesGen(src, dest, deptTime, arrTime, flightNo, c, price, seatsA);
     delete fl;
 }
 
 //change time function
 void changeTime() {
-    printFlights();
+    printFlights();string fn;int i;
     int flightNo;
     string nDept, nArrive;
     cout << "Enter flight number: ";
-    cin >> flightNo;
+    cin >> fn;
+    for (i=0;i<fn.length();i++)
+    { if(!isdigit(fn[i]))
+    { cout<<"Incorrect flight no\n";
+        cout<<"Enter flight no";
+        cin>>fn;}
+        
+    }
+    stringstream sr(fn);
+    sr>>flightNo;
     cout << "Enter new Time of Departure: ";
     cin >> nDept;
+    stringstream geek1(nDept.substr(0,2));
+    stringstream geek2(nDept.substr(3,2));
+    int a =0, b = 0;
+    geek1 >> a;
+    geek2 >> b;
     cout << "Enter new Time of Arrival: ";
     cin >> nArrive;
+    stringstream geek3(nArrive.substr(0,2));
+    stringstream geek4(nArrive.substr(3,2));
+    int c =0, d = 0;
+    geek3 >> c;
+    geek4 >> d;
+    if(c < a){
+        cout << "Time of departure is after time of arrival";
+        return;
+    }
     ofstream red("tempflight.txt");
     string line;
     ifstream fin("flightDetails.txt");
@@ -443,9 +693,19 @@ void changeTime() {
 //delete flight function
 void deleteFlight() {
     printFlights();
-    int flightNo;
+    int flightNo;string fn;int i;
     cout << "Enter flight number: ";
-    cin >> flightNo;
+    cin >> fn;
+    for (i=0;i<fn.length();i++)
+    { if(!isdigit(fn[i]))
+    { cout<<"Incorrect flight no\n";
+        cout<<"Enter flight no";
+        cin>>fn;}
+        
+    }
+    stringstream sr(fn);
+    sr>>flightNo;
+    
     ofstream red("tempflight.txt");
     string line;
     ifstream fin("flightDetails.txt");
@@ -464,7 +724,7 @@ void deleteFlight() {
         }
     }
     else
-    cout << "File not open!" << endl;
+        cout << "File not open!" << endl;
     remove("flightDetails.txt");
     cout << "\nFLIGHT DELETED.\n";
     rename("tempflight.txt","flightDetails.txt");
@@ -554,7 +814,7 @@ void adminCreate() {
     else {
         cout << "\nWrong key. Please contact sysadmin." << endl;
     }
-
+    
 }
 
 
@@ -591,16 +851,24 @@ void generateFiles() {
     planesGen f10("BAN", "MUM","16:00", "17:30", 3819, 'F', 6500, 35);
     cout << "Flights Generated!" << endl;
     
-    passenger p1("Sudarshan", "Kumar", "12-12-2018", 9991, 25);
-    passenger p2("Tanisha", "Naik", "10-12-2018", 8823, 16);
-    passenger p3("Siddharth", "Mallapa", "12-01-2018", 4829, 9);
-    passenger p4("Siddhant", "Sud", "06-12-2018", 3819, 6);
+    passenger p1("Sudarshan", "Kumar", "28-12-2018", 9991, 25);
+    passenger p2("Tanisha", "Naik", "26-12-2018", 8823, 16);
+    passenger p3("Siddharth", "Mallapa", "01-01-2019", 4829, 9);
+    passenger p4("Siddhant", "Sud", "05-01-2019", 3819, 6);
     cout << "People generated!" << endl;
     
     adminAcc a1("user1", "password123");
     adminAcc a2("user2", "password234");
     adminAcc a3("a", "a");
     cout << "Admin Accounts generated!" << endl;
+    
+    placesGen b1("BAN");
+    placesGen b2("MUM");
+    placesGen b3("DEL");
+    placesGen b4("KOL");
+    placesGen b5("PUN");
+    cout << "Locations generated!" << endl;
+    
 }
 
 //reset Files
@@ -608,6 +876,7 @@ void resetFiles() {
     remove("admins.txt");
     remove("flightDetails.txt");
     remove("Passengers.txt");
+    remove("places.txt");
 }
 
 //debug
@@ -630,16 +899,7 @@ void debug() {
     debug();
 }
 
-void stripper() {
-    cout << "Hello ladies and gents. " << endl;
-    cout << "Your stripper name is " << endl;
-    string name;
-    cin >> name;
-    cout << "Hello " << name << "! ;)" << endl;
-    cout << "Now we present. " << endl;
-    cout << "SEXYRED!!!" <<endl;
-    cout << "AND SHANQTIE" << endl;
-}
+
 
 void privilage() {
     int userType;
@@ -654,8 +914,6 @@ void privilage() {
         case 2: admin();
             break;
         case 99: debug();
-            break;
-        case -9999: stripper();
             break;
         case 3:
             return;
@@ -672,5 +930,7 @@ int main() {
     writeAdmin.close();
     readPassengers.close();
     writePassengers.close();
+    readDest.close();
+    writeDest.close();
     return 0;
 }
